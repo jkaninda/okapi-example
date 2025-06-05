@@ -36,6 +36,14 @@ go mod tidy
 go run .
 ```
 
+Visit [`http://localhost:8080`](http://localhost:8080) to see the response:
+
+```json
+{"message": "Welcome to Okapi!"}
+```
+
+Visit [`http://localhost:8080/docs/`](http://localhost:8080/docs/) to see the documentation
+
 ## Project Structure
 
 ```
