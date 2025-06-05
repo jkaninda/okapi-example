@@ -25,8 +25,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"github.com/jkaninda/logger"
 	"github.com/jkaninda/okapi"
 	"net/http"
 )
@@ -64,13 +64,16 @@ var (
 )
 
 func main() {
-	// Example usage of Group handling in Okapi
-	// Create a new Okapi instance
-	o := okapi.New(okapi.WithReadTimeout(15), okapi.WithWriteTimeout(15))
+	log := logger.New(logger.WithCaller(), logger.WithJSONFormat())
+	// Create a new Okapi instance and use custom logger
+	o := okapi.New(okapi.WithReadTimeout(15), okapi.WithWriteTimeout(15), okapi.WithLogger(log.Logger))
+	// Enable openapi documentation
+	o.With().WithOpenAPIDocs()
+
 	o.Get("/", func(c okapi.Context) error {
 		// Handler logic for the root route
-		return c.JSON(http.StatusOK, okapi.M{"message": "Welcome to Okapi!"})
-	})
+		return c.OK(okapi.M{"message": "Welcome to Okapi!"})
+	}, okapi.DocSummary("Welcome page"), okapi.DocResponse(okapi.M{}))
 	// Create a new group with a base path
 	api := o.Group("/api")
 	// Create and apply custom middleware to the v1 group
@@ -78,14 +81,16 @@ func main() {
 
 	// Define a route with a handler
 	v1.Get("/users", func(c okapi.Context) error {
-		return c.JSON(http.StatusOK, users)
-	})
+		return c.OK(users)
+	},
+		okapi.Doc().Summary("Get all users").Response([]User{}).Build(),
+	)
 	// Get user
-	v1.Get("/users/:id", show)
+	v1.Get("/users/:id", show, okapi.DocPathParam("id", "int", "User Id"))
 	// Update user
-	v1.Put("/users/:id", update)
+	v1.Put("/users/:id", update, okapi.DocPathParam("id", "int", "User Id"))
 	// Create user
-	v1.Post("/users", store)
+	v1.Post("/users", store, okapi.DocRequestBody(User{}), okapi.DocResponse(User{}))
 
 	// Create a new group with a base path v2
 	v2 := api.Group("/v2")
@@ -93,8 +98,10 @@ func main() {
 	v2.Get("/users", func(c okapi.Context) error {
 		c.SetHeader("Version", "v2")
 		// Handler logic for the route
-		return c.JSON(http.StatusOK, users)
-	})
+		return c.OK(users)
+	},
+		okapi.Doc().Summary("Get all users").Response([]User{}).Build(),
+	)
 	v2.Get("/users/:id", func(c okapi.Context) error {
 		c.SetHeader("Version", "v2")
 		id := c.Param("id")
@@ -103,17 +110,21 @@ func main() {
 				return c.JSON(http.StatusOK, user)
 			}
 		}
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
-	})
+		return c.ErrorNotFound(map[string]string{"error": "User not found"})
+	},
+		okapi.Doc().Summary("Get user by Id").Response([]User{}).
+			PathParam("id", "int", "User Id").
+			Build(),
+	)
 
 	// Create a new group with a base path for admin routes and apply basic auth middleware
 	adminApi := api.Group("/admin", basicAuth.Middleware) // This group will require basic authentication
-	adminApi.Put("/books/:id", adminUpdate)
-	adminApi.Post("/books", adminStore)
+	adminApi.Put("/books/:id", adminUpdate, okapi.DocPathParam("id", "int", "Book Id"), okapi.DocResponse(Book{}))
+	adminApi.Post("/books", adminStore, okapi.DocRequestBody(Book{}), okapi.DocResponse(Book{}))
 
 	// Define routes for the v1 group
-	v1.Get("/books", getBooks)
-	v1.Get("/books/:id", getBook).Name = "show_book" // Named route for easier reference
+	v1.Get("/books", getBooks, okapi.DocResponse([]Book{}))
+	v1.Get("/books/:id", getBook, okapi.DocPathParam("id", "int", "Book Id"), okapi.DocResponse(Book{})).Name = "show_book" // Named route for easier reference
 
 	// Start the server
 	if err := o.Start(); err != nil {
@@ -183,7 +194,7 @@ func adminStore(c okapi.Context) error {
 func adminUpdate(c okapi.Context) error {
 	var newBook Book
 	if ok, err := c.ShouldBind(&newBook); !ok {
-		return c.AbortBadRequest(err)
+		return c.ErrorBadRequest(err)
 	}
 	for _, book := range books {
 		if book.ID == newBook.ID {
@@ -194,10 +205,10 @@ func adminUpdate(c okapi.Context) error {
 			return c.JSON(http.StatusOK, book)
 		}
 	}
-	return c.AbortNotFound(errors.New("book not found"))
+	return c.ErrorNotFound("Book not found")
 }
 func getBooks(c okapi.Context) error {
-	return c.JSON(http.StatusOK, books)
+	return c.OK(books)
 }
 func getBook(c okapi.Context) error {
 	var newBook Book

@@ -6,7 +6,7 @@ A simple example demonstrating Okapi API
 
 ## Prerequisites
 
-- Go 1.16+ installed
+- Go installed
 - Git installed
 
 ## Features
