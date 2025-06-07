@@ -4,7 +4,7 @@ go 1.24.3
 
 require (
 	github.com/jkaninda/logger v0.0.3
-	github.com/jkaninda/okapi v0.0.6
+	github.com/jkaninda/okapi v0.0.7
 )
 
 require (

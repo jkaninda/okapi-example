@@ -216,14 +216,14 @@ func getBook(c okapi.Context) error {
 	// You can also use c.Param("id") to get the ID from the URL
 	if ok, err := c.ShouldBind(&newBook); !ok {
 		errMessage := fmt.Sprintf("Failed to bind book: %v", err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input " + errMessage})
+		return c.ErrorBadRequest(map[string]string{"error": "Invalid input " + errMessage})
 	}
 	// time.Sleep(2 * time.Second) // Simulate a delay for demonstration purposes
 
 	for _, book := range books {
 		if book.ID == newBook.ID {
-			return c.JSON(http.StatusOK, book)
+			return c.OK(book)
 		}
 	}
-	return c.JSON(http.StatusNotFound, okapi.M{"error": "Book not found"})
+	return c.ErrorNotFound(okapi.M{"error": "Book not found"})
 }
