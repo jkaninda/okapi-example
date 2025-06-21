@@ -12,8 +12,9 @@ A simple example demonstrating Okapi API
 ## Features
 
 - Basic Okapi implementation example
+- Okapi middlewares
+- Okapi Route Definition
 - Ready-to-run code structure
-- Minimal dependencies
 
 ## Getting Started
 
@@ -39,7 +40,7 @@ go run .
 Visit [`http://localhost:8080`](http://localhost:8080) to see the response:
 
 ```json
-{"message": "Welcome to Okapi!"}
+{"message": "Welcome to the Okapi Web Framework!"}
 ```
 
 Visit [`http://localhost:8080/docs/`](http://localhost:8080/docs/) to see the documentation
@@ -49,8 +50,10 @@ Visit [`http://localhost:8080/docs/`](http://localhost:8080/docs/) to see the do
 ```
 .
 ├── main.go          # Main application file
-├── middleware.go    # Middleware file
-├── go.mod           # Go module file
+├── middlewares      # Middlewares package
+├── controllers      # Controllers package
+├── routes           # Routes package
+├── models           # Models package
 └── README.md        # Project documentation
 ```
 
