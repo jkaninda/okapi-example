@@ -1,10 +1,10 @@
 module github.com/jkaninda/okapi-example
 
-go 1.24.3
+go 1.24.4
 
 require (
-	github.com/jkaninda/logger v0.0.3
-	github.com/jkaninda/okapi v0.0.7
+	github.com/jkaninda/logger v0.0.5
+	github.com/jkaninda/okapi v0.0.14
 )
 
 require (

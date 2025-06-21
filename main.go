@@ -145,7 +145,7 @@ func store(c okapi.Context) error {
 	newUser.ID = len(users) + 1 // Simple ID assignment
 	users = append(users, &newUser)
 	// Respond with the created user
-	return c.JSON(http.StatusCreated, newUser)
+	return c.Created(newUser)
 }
 func show(c okapi.Context) error {
 	var newUser User
@@ -164,7 +164,7 @@ func update(c okapi.Context) error {
 	var newUser User
 	if ok, err := c.ShouldBind(&newUser); !ok {
 		errMessage := fmt.Sprintf("Failed to bind user data: %v", err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input " + errMessage})
+		return c.ErrorBadRequest(map[string]string{"error": "Invalid input " + errMessage})
 	}
 	for _, user := range users {
 		if user.ID == newUser.ID {
@@ -173,14 +173,14 @@ func update(c okapi.Context) error {
 			return c.JSON(http.StatusOK, user)
 		}
 	}
-	return c.JSON(http.StatusNotFound, okapi.M{"error": "User not found"})
+	return c.ErrorNotFound(okapi.M{"error": "User not found"})
 }
 
 func adminStore(c okapi.Context) error {
 	var newBook Book
 	if ok, err := c.ShouldBind(&newBook); !ok {
 		errMessage := fmt.Sprintf("Failed to bind book: %v", err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input " + errMessage})
+		return c.ErrorBadRequest(map[string]string{"error": "Invalid input " + errMessage})
 	}
 	// Get username
 	username := c.GetString("username")
