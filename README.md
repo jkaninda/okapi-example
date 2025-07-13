@@ -1,6 +1,8 @@
 # Okapi Example
 
-A simple example demonstrating Okapi API
+A simple example demonstrating the Okapi API Framework
+
+Okapi is a modern, minimalist HTTP web framework for Go, inspired by FastAPI's elegance. Designed for simplicity, performance, and developer happiness, it helps you build fast, scalable, and well-documented APIs with minimal boilerplate.
 
 [Github: https://github.com/jkaninda/okapi](https://github.com/jkaninda/okapi)
 
@@ -62,6 +64,7 @@ Visit [`http://localhost:8080/docs/`](http://localhost:8080/docs/) to see the do
 ├── models           # Models package
 └── README.md        # Project documentation
 ```
+
 ### Swagger UI Preview
 
 Okapi automatically generates Swagger UI for all routes:
