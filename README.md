@@ -62,7 +62,14 @@ Visit [`http://localhost:8080/docs/`](http://localhost:8080/docs/) to see the do
 ├── models           # Models package
 └── README.md        # Project documentation
 ```
+### Swagger UI Preview
 
+Okapi automatically generates Swagger UI for all routes:
+
+
+![Okapi Swagger Interface](https://raw.githubusercontent.com/jkaninda/okapi-example/main/swagger.png)
+
+---
 ## License
 
 [MIT](LICENSE) - Feel free to use and modify this example.
