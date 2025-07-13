@@ -37,6 +37,12 @@ go mod tidy
 go run .
 ```
 
+### Using Docker
+
+```shell
+docker run --rm --network web --name okapi-example -p 8080:8080 jkaninda/okapi-example
+```
+
 Visit [`http://localhost:8080`](http://localhost:8080) to see the response:
 
 ```json
