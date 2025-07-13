@@ -80,6 +80,24 @@ func Home() okapi.RouteDefinition {
 	}
 }
 
+// WhoAmI returns the route definition for the HomeController
+func WhoAmI() okapi.RouteDefinition {
+	return okapi.RouteDefinition{
+		Path:    "/whoami",
+		Method:  http.MethodGet,
+		Handler: homeController.WhoAmI,
+		Group:   &okapi.Group{Prefix: "/", Tags: []string{"HomeController"}},
+		Options: []okapi.RouteOption{
+			okapi.DocSummary("Whoami"),
+			okapi.DocDescription("Get the current user's information, no auth required"),
+			okapi.DocHeader("current_user_email", "string", "current user", false),
+			okapi.DocHeader("current_user_name", "string", "current name", false),
+			okapi.DocHeader("current_user_role", "string", "current role", false),
+			okapi.DocResponse(models.WhoAmIResponse{}),
+		},
+	}
+}
+
 // ************* Book Routes *************
 
 // BookRoutes returns the route definitions for the BookController
@@ -88,10 +106,11 @@ func BookRoutes() []okapi.RouteDefinition {
 	apiGroup.Use(middlewares.CustomMiddleware)
 	return []okapi.RouteDefinition{
 		{
-			Method:  http.MethodGet,
-			Path:    "/books",
-			Handler: bookController.GetBooks,
-			Group:   apiGroup,
+			Method:      http.MethodGet,
+			Path:        "/books",
+			Handler:     bookController.GetBooks,
+			Group:       apiGroup,
+			Middlewares: []okapi.Middleware{},
 			Options: []okapi.RouteOption{
 				okapi.DocSummary("Get Books"),
 				okapi.DocDescription("Retrieve a list of books"),
@@ -140,7 +159,7 @@ func AuthRoute() okapi.RouteDefinition {
 // ************** Authenticated Routes **************
 
 func CommonRoutes() []okapi.RouteDefinition {
-	coreGroup := &okapi.Group{Prefix: "/core", Tags: []string{"CoreController"}}
+	coreGroup := &okapi.Group{Prefix: "/core", Tags: []string{"SecurityController"}}
 	// Apply JWT authentication middleware to the admin group
 	coreGroup.Use(middlewares.JWTAuth.Middleware)
 	coreGroup.Use(middlewares.CustomMiddleware)

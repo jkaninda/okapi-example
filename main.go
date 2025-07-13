@@ -11,6 +11,7 @@ func main() {
 	// ************ Registering Routes ************
 	// Register home route
 	app.Register(routes.Home())
+	app.Register(routes.WhoAmI())
 	// Auth
 	app.Register(routes.AuthRoute())
 	// Register book routes

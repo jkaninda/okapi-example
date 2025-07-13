@@ -57,3 +57,9 @@ type UserInfo struct {
 	Email string `json:"email"`
 	Role  string `json:"role"`
 }
+
+type WhoAmIResponse struct {
+	Hostname    string   `json:"hostname"`
+	RealIp      string   `json:"real_ip"`
+	CurrentUser UserInfo `json:"current_user"`
+}

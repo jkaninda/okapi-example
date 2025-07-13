@@ -26,6 +26,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/jkaninda/logger"
 	"github.com/jkaninda/okapi-example/models"
 	"net/http"
 	"strconv"
@@ -50,6 +51,22 @@ var (
 
 func (hc *HomeController) Home(c okapi.Context) error {
 	return c.OK(okapi.M{"message": "Welcome to the Okapi Web Framework!"})
+}
+
+func (hc *HomeController) WhoAmI(c okapi.Context) error {
+	email := c.Header("current_user_email")
+	if email == "" {
+		logger.Warn("no email found")
+	}
+	return c.OK(models.WhoAmIResponse{
+		Hostname: c.Request().Host,
+		RealIp:   c.RealIP(),
+		CurrentUser: models.UserInfo{
+			Name:  c.Header("current_user_name"),
+			Email: email,
+			Role:  c.Header("current_user_role"),
+		},
+	})
 }
 func (bc *BookController) GetBooks(c okapi.Context) error {
 	// Simulate fetching books from a database
@@ -110,6 +127,9 @@ func (bc *AuthController) WhoAmI(c okapi.Context) error {
 		return c.AbortUnauthorized("Unauthorized", fmt.Errorf("user not authenticated"))
 	}
 
+	c.Response().Header().Set("X-Okapi-User", email)
+	c.Response().Header().Set("X-Okapi-User-Name", c.GetString("name"))
+	c.Response().Header().Set("X-Okapi-Role", c.GetString("role"))
 	// Respond with the current user information
 	return c.OK(models.UserInfo{
 		Email: email,

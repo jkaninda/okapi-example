@@ -3,6 +3,7 @@ package middlewares
 import (
 	"fmt"
 	"github.com/jkaninda/logger"
+	"github.com/jkaninda/okapi-example/utils"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -14,7 +15,7 @@ import (
 )
 
 var (
-	signingSecret = "supersecret"
+	signingSecret = utils.GetSingingSecret()
 	JWTAuth       = &okapi.JWTAuth{
 		SigningSecret:    []byte(signingSecret),
 		TokenLookup:      "header:Authorization",
@@ -35,7 +36,7 @@ var (
 			"name":  "user.name",
 		},
 		// CustomClaims claims validation function
-		ValidateClaims: func(claims jwt.Claims) error {
+		ValidateClaims: func(context okapi.Context, claims jwt.Claims) error {
 			slog.Info("Validating JWT claims for role using custom function")
 			// Simulate a custom claims validation
 			if _, ok := claims.(jwt.Claims); ok {
@@ -46,8 +47,8 @@ var (
 	}
 	jwtClaims = jwt.MapClaims{
 		"sub": "12345",
-		"iss": "okapi.example.com",
-		"aud": "okapi.example.com",
+		"iss": "okapi.jkaninda.dev",
+		"aud": "okapi.jkaninda.dev",
 		"user": map[string]string{
 			"name":  "",
 			"role":  "",
