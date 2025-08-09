@@ -1,11 +1,11 @@
 module github.com/jkaninda/okapi-example
 
-go 1.24.4
+go 1.24.5
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/jkaninda/logger v0.0.5
-	github.com/jkaninda/okapi v0.0.17
+	github.com/jkaninda/okapi v0.0.18
 )
 
 require (
@@ -26,10 +26,12 @@ require (
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/http-swagger v1.3.4 // indirect
-	github.com/swaggo/swag v1.16.4 // indirect
-	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/tools v0.33.0 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
+	github.com/swaggo/swag v1.16.6 // indirect
+	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
+	google.golang.org/protobuf v1.36.7 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

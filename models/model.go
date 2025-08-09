@@ -24,6 +24,8 @@
 
 package models
 
+import "time"
+
 // **************** Models ************************
 
 type Response struct {
@@ -32,9 +34,18 @@ type Response struct {
 	Data    Book   `json:"data"`
 }
 type Book struct {
-	Id    int    `json:"id"`
-	Name  string `json:"name" form:"name"  max:"50" required:"true" description:"Book name"`
-	Price int    `json:"price" form:"price" query:"price" yaml:"price" required:"true" description:"Book price"`
+	Id        int       `json:"id"`
+	Title     string    `json:"title" form:"title"  max:"50" required:"true" description:"Book name"`
+	Price     int       `json:"price" form:"price" query:"price" yaml:"price" required:"true" description:"Book price"`
+	Year      int       `json:"year" form:"year" query:"year" yaml:"year" required:"true" description:"Book year of publication"`
+	Author    string    `json:"author" form:"author" query:"author" yaml:"author" required:"false" description:"Book author"`
+	Country   string    `json:"country" form:"country" query:"country" yaml:"country" required:"false" description:"Book country of origin"`
+	ImageLink string    `json:"imageLink" form:"imageLink" query:"imageLink" yaml:"imageLink" required:"false" description:"Book image link"`
+	Language  string    `json:"language" form:"language" query:"language" yaml:"language" required:"false" description:"Book language"`
+	Link      string    `json:"link" form:"link" query:"link" yaml:"link" required:"false" description:"Book link"`
+	Pages     int       `json:"pages" form:"pages" query:"pages" yaml:"pages" required:"false" description:"Number of pages in the book"`
+	CreatedAt time.Time `json:"createdAt" form:"createdAt" query:"createdAt" yaml:"createdAt" required:"false" description:"Book creation date"`
+	UpdatedAt time.Time `json:"updatedAt" form:"updatedAt" query:"updatedAt" yaml:"updatedAt" required:"false" description:"Book last update date"`
 }
 type ErrorResponse struct {
 	Success bool `json:"success"`
@@ -59,7 +70,7 @@ type UserInfo struct {
 }
 
 type WhoAmIResponse struct {
-	Hostname    string   `json:"hostname"`
-	RealIp      string   `json:"real_ip"`
-	CurrentUser UserInfo `json:"current_user"`
+	Host        string   `json:"host"`
+	RealIp      string   `json:"realIp"`
+	CurrentUser UserInfo `json:"currentUser"`
 }

@@ -7,18 +7,20 @@ import (
 
 func main() {
 	// Create a new Okapi instance with default config
-	app := okapi.Default()
+	app := okapi.New()
+	route := routes.NewRoute(app)
+
 	// ************ Registering Routes ************
 	// Register home route
-	app.Register(routes.Home())
-	app.Register(routes.WhoAmI())
+	app.Register(route.Home())
+	app.Register(route.WhoAmI())
 	// Auth
-	app.Register(routes.AuthRoute())
+	app.Register(route.AuthRoute())
 	// Register book routes
-	app.Register(routes.BookRoutes()...)
-	app.Register(routes.CommonRoutes()...)
+	app.Register(route.BookRoutes()...)
+	app.Register(route.CommonRoutes()...)
 	// Admin routes
-	app.Register(routes.AdminRoutes()...)
+	app.Register(route.AdminRoutes()...)
 
 	// Start the server
 	if err := app.Start(); err != nil {

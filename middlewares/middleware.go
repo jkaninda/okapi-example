@@ -18,6 +18,8 @@ var (
 	signingSecret = utils.GetSingingSecret()
 	JWTAuth       = &okapi.JWTAuth{
 		SigningSecret:    []byte(signingSecret),
+		Audience:         "okapi.jkaninda.dev",
+		Issuer:           "okapi.jkaninda.dev",
 		TokenLookup:      "header:Authorization",
 		ClaimsExpression: "Equals(`email_verified`, `true`) && OneOf(`user.role`, `admin`, `owner`,`user`) && Contains(`permissions`, `read`, `create`)",
 		ForwardClaims: map[string]string{
@@ -29,6 +31,8 @@ var (
 	AdminJWTAuth = &okapi.JWTAuth{
 		SigningSecret:    []byte(signingSecret),
 		TokenLookup:      "header:Authorization",
+		Audience:         "okapi.jkaninda.dev",
+		Issuer:           "okapi.jkaninda.dev",
 		ClaimsExpression: "Equals(`email_verified`, `true`) && Equals(`user.role`, `admin`) && Contains(`permissions`, `read`, `create`, `delete`, `update`)",
 		ForwardClaims: map[string]string{
 			"email": "user.email",

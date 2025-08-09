@@ -44,6 +44,7 @@ go run .
 ```shell
 docker run --rm --name okapi-example -p 8080:8080 jkaninda/okapi-example
 ```
+Use `JWT_SIGNING_SECRET` environment variable if you want to change JWT secret, default: `supersecret`
 
 Visit [`http://localhost:8080`](http://localhost:8080) to see the response:
 

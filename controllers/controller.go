@@ -25,14 +25,15 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jkaninda/logger"
-	"github.com/jkaninda/okapi-example/models"
-	"net/http"
-	"strconv"
-
 	"github.com/jkaninda/okapi"
 	"github.com/jkaninda/okapi-example/middlewares"
+	"github.com/jkaninda/okapi-example/models"
+	"net/http"
+	"os"
+	"strconv"
 )
 
 type BookController struct{}
@@ -41,9 +42,9 @@ type AuthController struct{}
 
 var (
 	books = []*models.Book{
-		{Id: 1, Name: "Book One", Price: 100},
-		{Id: 2, Name: "Book Two", Price: 200},
-		{Id: 3, Name: "Book Three", Price: 300},
+		{Id: 1, Title: "Book One", Price: 100},
+		{Id: 2, Title: "Book Two", Price: 200},
+		{Id: 3, Title: "Book Three", Price: 300},
 	}
 )
 
@@ -59,8 +60,8 @@ func (hc *HomeController) WhoAmI(c okapi.Context) error {
 		logger.Warn("no email found")
 	}
 	return c.OK(models.WhoAmIResponse{
-		Hostname: c.Request().Host,
-		RealIp:   c.RealIP(),
+		Host:   c.Request().Host,
+		RealIp: c.RealIP(),
 		CurrentUser: models.UserInfo{
 			Name:  c.Header("current_user_name"),
 			Email: email,
@@ -69,7 +70,11 @@ func (hc *HomeController) WhoAmI(c okapi.Context) error {
 	})
 }
 func (bc *BookController) GetBooks(c okapi.Context) error {
-	// Simulate fetching books from a database
+	_, err := bc.readBooksFromFile()
+	if err != nil {
+		logger.Error("Error reading books from file", "error", err)
+		return c.ErrorInternalServerError(models.ErrorResponse{Success: false, Status: http.StatusInternalServerError, Details: err.Error()})
+	}
 	return c.OK(books)
 }
 
@@ -97,6 +102,11 @@ func (bc *BookController) GetBook(c okapi.Context) error {
 	}
 	// Simulate a fetching book from a database
 
+	_, err = bc.readBooksFromFile()
+	if err != nil {
+		logger.Error("Error reading books from file", "error", err)
+		return c.ErrorInternalServerError(models.ErrorResponse{Success: false, Status: http.StatusInternalServerError, Details: err.Error()})
+	}
 	for _, book := range books {
 		if book.Id == i {
 			return c.OK(book)
@@ -137,4 +147,21 @@ func (bc *AuthController) WhoAmI(c okapi.Context) error {
 		Name:  c.GetString("name"),
 	},
 	)
+}
+
+func (bc *BookController) readBooksFromFile() ([]*models.Book, error) {
+	if books != nil && len(books) > 3 {
+		return books, nil
+	}
+	booksFile, err := os.ReadFile("data/books.json")
+	if err != nil {
+		logger.Error("Error reading books file", "error", err)
+		return nil, fmt.Errorf("failed to read books data: %w", err)
+	}
+	err = json.Unmarshal(booksFile, &books)
+	if err != nil {
+		logger.Error("Error unmarshalling books data", "error", err)
+		return nil, fmt.Errorf("failed to parse books data: %w", err)
+	}
+	return books, nil
 }

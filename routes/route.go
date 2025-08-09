@@ -34,44 +34,50 @@ import (
 )
 
 var (
-	bookController = &controllers.BookController{}
-	homeController = &controllers.HomeController{}
-	authController = &controllers.AuthController{}
+	bookController     = &controllers.BookController{}
+	homeController     = &controllers.HomeController{}
+	authController     = &controllers.AuthController{}
+	bearerAuthSecurity = []map[string][]string{
+		{
+			"bearerAuth": {},
+		},
+	}
 )
 
 // You can also use this example
 
-// type Route struct {
-//	app *okapi.Okapi
-// }
-// // NewRoute creates a new Route instance with the provided Okapi app
-// func NewRoute(app *okapi.Okapi) *Route {
-//	return &Route{
-//		app: app,
-//	}
-// }
-// func (r *Route) Home()okapi.RouteDefinition  {
-//	// you can access directly the okapi app instance
-//	// r.app.Get("/", homeController.Home)
-//
-//	// or use okapi.RouteDefinition
-//	return okapi.RouteDefinition{
-//		Path:    "/",
-//		Method:  http.MethodGet,
-//		Handler: homeController.Home,
-//		Group:   &okapi.Group{Prefix: "/", Tags: []string{"HomeController"}},
-//	}
-// }
-// // in main.go, you can register the routes like this:
-// app := okapi.Default()
-// route := routes.NewRoute(app)
-// // Register the home route
-// app.Register(route.Home())
+type Route struct {
+	app *okapi.Okapi
+}
+
+// NewRoute creates a new Route instance with the provided Okapi app
+// NewRoute creates a new Route instance with the Okapi application
+func NewRoute(app *okapi.Okapi) *Route {
+	// Update OpenAPI documentation with the application title and version
+	app.WithOpenAPIDocs(okapi.OpenAPI{
+		Title:   "Okapi Web Framework Example",
+		Version: "1.0.0",
+		License: okapi.License{
+			Name: "MIT",
+		},
+		SecuritySchemes: okapi.SecuritySchemes{
+			{
+				Name:         "bearerAuth",
+				Type:         "http",
+				Scheme:       "bearer",
+				BearerFormat: "JWT",
+			},
+		},
+	})
+	return &Route{
+		app: app,
+	}
+}
 
 // ****************** Route Definitions ******************
 
 // Home returns the route definition for the HomeController
-func Home() okapi.RouteDefinition {
+func (r *Route) Home() okapi.RouteDefinition {
 	return okapi.RouteDefinition{
 		Path:    "/",
 		Method:  http.MethodGet,
@@ -81,7 +87,7 @@ func Home() okapi.RouteDefinition {
 }
 
 // WhoAmI returns the route definition for the HomeController
-func WhoAmI() okapi.RouteDefinition {
+func (r *Route) WhoAmI() okapi.RouteDefinition {
 	return okapi.RouteDefinition{
 		Path:    "/whoami",
 		Method:  http.MethodGet,
@@ -101,7 +107,7 @@ func WhoAmI() okapi.RouteDefinition {
 // ************* Book Routes *************
 
 // BookRoutes returns the route definitions for the BookController
-func BookRoutes() []okapi.RouteDefinition {
+func (r *Route) BookRoutes() []okapi.RouteDefinition {
 	apiGroup := &okapi.Group{Prefix: "/api", Tags: []string{"BookController"}}
 	apiGroup.Use(middlewares.CustomMiddleware)
 	return []okapi.RouteDefinition{
@@ -137,7 +143,7 @@ func BookRoutes() []okapi.RouteDefinition {
 
 // *************** Auth Routes ****************
 
-func AuthRoute() okapi.RouteDefinition {
+func (r *Route) AuthRoute() okapi.RouteDefinition {
 	apiGroup := &okapi.Group{Prefix: "/auth", Tags: []string{"AuthController"}}
 	apiGroup.Use(middlewares.CustomMiddleware)
 	return okapi.RouteDefinition{
@@ -158,12 +164,12 @@ func AuthRoute() okapi.RouteDefinition {
 
 // ************** Authenticated Routes **************
 
-func CommonRoutes() []okapi.RouteDefinition {
+func (r *Route) CommonRoutes() []okapi.RouteDefinition {
 	coreGroup := &okapi.Group{Prefix: "/core", Tags: []string{"SecurityController"}}
 	// Apply JWT authentication middleware to the admin group
 	coreGroup.Use(middlewares.JWTAuth.Middleware)
 	coreGroup.Use(middlewares.CustomMiddleware)
-	coreGroup.WithBearerAuth() //Enable Bearer token for OpenAPI documentation
+	coreGroup.WithSecurity(bearerAuthSecurity) //Enable Bearer token for OpenAPI documentation
 	return []okapi.RouteDefinition{
 		{
 			Method:  http.MethodPost,
@@ -181,7 +187,7 @@ func CommonRoutes() []okapi.RouteDefinition {
 
 // ***************** Admin Routes *****************
 
-func AdminRoutes() []okapi.RouteDefinition {
+func (r *Route) AdminRoutes() []okapi.RouteDefinition {
 	apiGroup := &okapi.Group{Prefix: "/admin", Tags: []string{"AdminController"}}
 	// Apply JWT authentication middleware to the admin group
 	apiGroup.Use(middlewares.AdminJWTAuth.Middleware)
@@ -201,6 +207,20 @@ func AdminRoutes() []okapi.RouteDefinition {
 				okapi.DocRequestBody(models.Book{}),
 				okapi.DocResponse(models.Response{}),
 			},
+			Security: bearerAuthSecurity,
+		},
+
+		{
+			Method:  http.MethodGet,
+			Path:    "/books",
+			Handler: bookController.GetBooks,
+			Group:   apiGroup,
+			Options: []okapi.RouteOption{
+				okapi.DocSummary("Get Books"),
+				okapi.DocDescription("Get books"),
+				okapi.DocResponse([]models.Book{}),
+			},
+			Security: bearerAuthSecurity,
 		},
 	}
 }

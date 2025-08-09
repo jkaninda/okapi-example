@@ -1,7 +1,7 @@
 ########################
 # Builder Stage
 ########################
-FROM golang:1.24.4 AS build
+FROM golang:1.24.5 AS build
 
 WORKDIR /app
 
@@ -28,6 +28,10 @@ RUN apk --update --no-cache add tzdata ca-certificates curl
 COPY --from=build /app/okapi-example /usr/local/bin/okapi-example
 RUN chmod a+x /usr/local/bin/okapi-example && ln -s /usr/local/bin/okapi-example /okapi-example
 
+## Copy data directory
+COPY data /app/data
+# Set working directory
+WORKDIR /app
 # Expose HTTP Port
 EXPOSE 8080
 
