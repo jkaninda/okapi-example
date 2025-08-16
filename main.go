@@ -18,6 +18,7 @@ func main() {
 	app.Register(route.AuthRoute())
 	// Register book routes
 	app.Register(route.BookRoutes()...)
+	app.Register(route.APIBookRoutes()...)
 	app.Register(route.CommonRoutes()...)
 	// Admin routes
 	app.Register(route.AdminRoutes()...)

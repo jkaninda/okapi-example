@@ -106,10 +106,11 @@ func (r *Route) WhoAmI() okapi.RouteDefinition {
 
 // ************* Book Routes *************
 
-// BookRoutes returns the route definitions for the BookController
-func (r *Route) BookRoutes() []okapi.RouteDefinition {
+// APIBookRoutes returns the route definitions for the BookController
+func (r *Route) APIBookRoutes() []okapi.RouteDefinition {
 	apiGroup := &okapi.Group{Prefix: "/api", Tags: []string{"BookController"}}
 	apiGroup.Use(middlewares.CustomMiddleware)
+	apiGroup.Deprecated()
 	return []okapi.RouteDefinition{
 		{
 			Method:      http.MethodGet,
@@ -129,6 +130,36 @@ func (r *Route) BookRoutes() []okapi.RouteDefinition {
 			Path:    "/books/:id",
 			Handler: bookController.GetBook,
 			Group:   apiGroup,
+			Options: []okapi.RouteOption{
+				okapi.DocSummary("Get Book by ID"),
+				okapi.DocDescription("Retrieve a book by its ID"),
+				okapi.DocPathParam("id", "int", "The ID of the book"),
+				okapi.DocResponse(models.Book{}),
+				okapi.DocResponse(http.StatusBadRequest, models.ErrorResponse{}),
+				okapi.DocResponse(http.StatusNotFound, models.ErrorResponse{}),
+			},
+		},
+	}
+}
+func (r *Route) BookRoutes() []okapi.RouteDefinition {
+	return []okapi.RouteDefinition{
+		{
+			Method:      http.MethodGet,
+			Path:        "/books",
+			Handler:     bookController.GetBooks,
+			Middlewares: []okapi.Middleware{middlewares.CustomMiddleware},
+			Options: []okapi.RouteOption{
+				okapi.DocSummary("Get Books"),
+				okapi.DocDescription("Retrieve a list of books"),
+				okapi.DocResponse([]models.Book{}),
+				okapi.DocResponse(http.StatusBadRequest, models.ErrorResponse{}),
+			},
+		},
+		{
+			Method:      http.MethodGet,
+			Path:        "/books/:id",
+			Handler:     bookController.GetBook,
+			Middlewares: []okapi.Middleware{middlewares.CustomMiddleware},
 			Options: []okapi.RouteOption{
 				okapi.DocSummary("Get Book by ID"),
 				okapi.DocDescription("Retrieve a book by its ID"),
