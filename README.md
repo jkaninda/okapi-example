@@ -4,7 +4,9 @@ A simple example demonstrating the Okapi API Framework
 
 Okapi is a modern, minimalist HTTP web framework for Go, inspired by FastAPI's elegance. Designed for simplicity, performance, and developer happiness, it helps you build fast, scalable, and well-documented APIs with minimal boilerplate.
 
-[Github: https://github.com/jkaninda/okapi](https://github.com/jkaninda/okapi)
+* [Okapi](https://github.com/jkaninda/okapi)
+* [Source Code](https://github.com/jkaninda/okapi-example)
+* [Docker Hub](https://hub.docker.com/r/jkaninda/okapi-example)
 
 ## Prerequisites
 
