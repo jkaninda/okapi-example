@@ -27,12 +27,46 @@ package models
 import "time"
 
 // **************** Models ************************
-
-type Response struct {
+type ResponseDto struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
-	Data    Book   `json:"data"`
+	Details any    `json:"details,omitempty"`
 }
+
+type Response[T any] struct {
+	ResponseDto
+	Data T `json:"data,omitempty"`
+}
+
+func SuccessResponse[T any](message string, data T) Response[T] {
+	return Response[T]{
+		ResponseDto: ResponseDto{
+			Success: true,
+			Message: message,
+		},
+		Data: data,
+	}
+}
+func ErrorResponse(message string, err error) Response[any] {
+	return Response[any]{
+		ResponseDto: ResponseDto{
+			Success: false,
+			Message: message,
+			Details: err.Error(),
+		},
+	}
+}
+func ErrorResponseData(message string, err error, data any) Response[any] {
+	return Response[any]{
+		ResponseDto: ResponseDto{
+			Success: false,
+			Message: message,
+			Details: err,
+		},
+		Data: data,
+	}
+}
+
 type Book struct {
 	Id        int       `json:"id"`
 	Title     string    `json:"title" form:"title"  max:"50" required:"true" description:"Book name"`
@@ -47,21 +81,15 @@ type Book struct {
 	CreatedAt time.Time `json:"createdAt" form:"createdAt" query:"createdAt" yaml:"createdAt" required:"false" description:"Book creation date"`
 	UpdatedAt time.Time `json:"updatedAt" form:"updatedAt" query:"updatedAt" yaml:"updatedAt" required:"false" description:"Book last update date"`
 }
-type ErrorResponse struct {
-	Success bool `json:"success"`
-	Status  int  `json:"status"`
-	Details any  `json:"details"`
-}
 
 type AuthRequest struct {
-	Username string `json:"username" required:"true" description:"Username for authentication"`
+	Username string `json:"username" required:"true" description:"Username for authentication" minLength:"3" pattern:"^[a-z]+$"`
 	Password string `json:"password" required:"true" description:"Password for authentication"`
 }
-type AuthResponse struct {
-	Success   bool   `json:"success"`
-	Message   string `json:"message"`
-	Token     string `json:"token,omitempty"`
-	ExpiresAt int64  `json:"expires,omitempty"`
+type Auth struct {
+	Token     string   `json:"token,omitempty"`
+	ExpiresAt int64    `json:"expires,omitempty"`
+	USer      UserInfo `json:"user"`
 }
 type UserInfo struct {
 	Name  string `json:"name"`
@@ -73,4 +101,24 @@ type WhoAmIResponse struct {
 	Host        string   `json:"host"`
 	RealIp      string   `json:"realIp"`
 	CurrentUser UserInfo `json:"currentUser"`
+}
+type WhoAmIRequest struct {
+	Email string `header:"current_user_email" format:"email"`
+	Name  string `header:"current_user_name"`
+	Role  string `header:"current_user_role" enum:"ADMIN,admin,USER,user" doc:"One of ADMIN,admin,USER or user"`
+}
+type BookResponse = Response[Book]
+type UserResponse = Response[UserInfo]
+type BooksResponse = Response[[]Book]
+type AuthResponse = Response[Auth]
+
+type RequestDto struct {
+	Platform string `json:"platform" enum:"web,mobile"`
+	AppId    string `json:"appId" enum:"com.mobile,com.web"`
+	Details  any    `json:"details,omitempty"`
+}
+
+type Request[T any] struct {
+	RequestDto
+	Fields T `json:"fields,omitempty"`
 }

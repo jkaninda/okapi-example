@@ -2,12 +2,13 @@ package middlewares
 
 import (
 	"fmt"
-	"github.com/jkaninda/logger"
-	"github.com/jkaninda/okapi-example/utils"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
+
+	goutils "github.com/jkaninda/go-utils"
+	"github.com/jkaninda/logger"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jkaninda/okapi"
@@ -15,7 +16,7 @@ import (
 )
 
 var (
-	signingSecret = utils.GetSingingSecret()
+	signingSecret = goutils.Env("JWT_SECRET", "default-secret-key")
 	JWTAuth       = &okapi.JWTAuth{
 		SigningSecret:    []byte(signingSecret),
 		Audience:         "okapi.jkaninda.dev",
@@ -40,12 +41,10 @@ var (
 			"name":  "user.name",
 		},
 		// CustomClaims claims validation function
-		ValidateClaims: func(context okapi.Context, claims jwt.Claims) error {
+		ValidateClaims: func(context *okapi.Context, claims jwt.Claims) error {
 			slog.Info("Validating JWT claims for role using custom function")
 			// Simulate a custom claims validation
-			if _, ok := claims.(jwt.Claims); ok {
 
-			}
 			return nil
 		},
 	}
@@ -65,17 +64,14 @@ var (
 	adminPermissions = []string{"read", "create", "delete", "update"}
 )
 
-func Login(authRequest *models.AuthRequest) (models.AuthResponse, error) {
+func Login(authRequest *models.AuthRequest) (models.Auth, error) {
 	// This is where you would typically validate the user credentials against a database
 
 	logger.Info("Login attempt", "username", authRequest.Username)
 	// Simulate a login function that returns a JWT token
 	if authRequest.Username != "admin" && authRequest.Password != "password" ||
 		authRequest.Username != "user" && authRequest.Password != "password" {
-		return models.AuthResponse{
-			Success: false,
-			Message: "Invalid username or password",
-		}, fmt.Errorf("username or password is wrong")
+		return models.Auth{}, fmt.Errorf("username or password is wrong")
 	}
 
 	if _, ok := jwtClaims["user"].(map[string]string); ok {
@@ -97,21 +93,21 @@ func Login(authRequest *models.AuthRequest) (models.AuthResponse, error) {
 	token, err := okapi.GenerateJwtToken(JWTAuth.SigningSecret, jwtClaims, expireAt)
 	if err != nil {
 
-		return models.AuthResponse{
-			Success: false,
-			Message: "Invalid username or password",
-		}, fmt.Errorf("failed to generate JWT token: %w", err)
+		return models.Auth{}, fmt.Errorf("failed to generate JWT token: %w", err)
 	}
-	return models.AuthResponse{
-		Success:   true,
-		Message:   "Welcome back " + authRequest.Username,
+	return models.Auth{
 		Token:     token,
 		ExpiresAt: time.Now().Add(expireAt).Unix(),
+		USer: models.UserInfo{
+			Name:  strings.ToTitle(authRequest.Username),
+			Role:  authRequest.Username,
+			Email: fmt.Sprintf("%s@example.com", authRequest.Username),
+		},
 	}, nil
 
 }
-func CustomMiddleware(next okapi.HandleFunc) okapi.HandleFunc {
-	return func(c okapi.Context) error {
+func CustomMiddleware(next okapi.HandlerFunc) okapi.HandlerFunc {
+	return func(c *okapi.Context) error {
 		slog.Info("Custom middleware executed", "path", c.Request().URL.Path, "method", c.Request().Method)
 		// You can add any custom logic here, such as logging, authentication, etc.
 		// For example, let's log the request method and URL

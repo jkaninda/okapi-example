@@ -1,11 +1,5 @@
 package utils
 
-import "os"
+const AppName = "Okapi Web Framework Example"
 
-func GetSingingSecret() string {
-	value := os.Getenv("JWT_SIGNING_SECRET")
-	if value == "" {
-		return "supersecret"
-	}
-	return value
-}
+var AppVersion = "1.0"

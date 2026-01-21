@@ -18,6 +18,8 @@ Okapi is a modern, minimalist HTTP web framework for Go, inspired by FastAPI's e
 - Basic Okapi implementation example
 - Okapi middlewares
 - Okapi Route Definition
+- Okapi SSE
+- Okapi Websocket
 - Ready-to-run code structure
 
 ## Getting Started
@@ -50,9 +52,7 @@ Use `JWT_SIGNING_SECRET` environment variable if you want to change JWT secret, 
 
 Visit [`http://localhost:8080`](http://localhost:8080) to see the response:
 
-```json
-{"message": "Welcome to the Okapi Web Framework!"}
-```
+
 
 Visit [`http://localhost:8080/docs/`](http://localhost:8080/docs/) to see the documentation
 
@@ -62,9 +62,10 @@ Visit [`http://localhost:8080/docs/`](http://localhost:8080/docs/) to see the do
 .
 ├── main.go          # Main application file
 ├── middlewares      # Middlewares package
-├── controllers      # Controllers package
+├── services         # Services package
 ├── routes           # Routes package
 ├── models           # Models package
+├── session          # Session Manager package
 └── README.md        # Project documentation
 ```
 
