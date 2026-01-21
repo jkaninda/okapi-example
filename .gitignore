@@ -2,3 +2,6 @@ public
 .DS_Store
 /.history
 Makefile
+certs
+.env
+coverage.txt

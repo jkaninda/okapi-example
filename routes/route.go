@@ -25,18 +25,20 @@
 package routes
 
 import (
-	"github.com/jkaninda/okapi-example/controllers"
-	"github.com/jkaninda/okapi-example/models"
 	"net/http"
+
+	"github.com/jkaninda/okapi-example/config"
+	"github.com/jkaninda/okapi-example/models"
+	"github.com/jkaninda/okapi-example/services"
 
 	"github.com/jkaninda/okapi"
 	"github.com/jkaninda/okapi-example/middlewares"
 )
 
 var (
-	bookController     = &controllers.BookController{}
-	homeController     = &controllers.HomeController{}
-	authController     = &controllers.AuthController{}
+	bookService        = &services.BookService{}
+	commonService      = &services.CommonService{}
+	authService        = &services.AuthService{}
 	bearerAuthSecurity = []map[string][]string{
 		{
 			"bearerAuth": {},
@@ -47,171 +49,167 @@ var (
 // You can also use this example
 
 type Route struct {
-	app *okapi.Okapi
+	app   *okapi.Okapi
+	group *okapi.Group
+	cfg   *config.Config
 }
 
 // NewRoute creates a new Route instance with the provided Okapi app
-// NewRoute creates a new Route instance with the Okapi application
-func NewRoute(app *okapi.Okapi) *Route {
-	// Update OpenAPI documentation with the application title and version
-	app.WithOpenAPIDocs(okapi.OpenAPI{
-		Title:   "Okapi Web Framework Example",
-		Version: "1.0.0",
-		License: okapi.License{
-			Name: "MIT",
-		},
-		SecuritySchemes: okapi.SecuritySchemes{
-			{
-				Name:         "bearerAuth",
-				Type:         "http",
-				Scheme:       "bearer",
-				BearerFormat: "JWT",
-			},
-		},
-	})
+func New(app *okapi.Okapi, conf *config.Config) *Route {
+	commonService.SessionManager = conf.SessionManager
 	return &Route{
-		app: app,
+		app:   app,
+		group: &okapi.Group{Prefix: "api/v1"},
+		cfg:   conf,
 	}
+}
+
+func (r *Route) RegisterRoutes() {
+	r.registerAll()
+	r.app.Register(r.whoAmI())
+	r.app.Register(r.authRoute())
+	r.app.Register(r.coreRoutes()...)
+	r.app.Register(r.bookRoutes()...)
+	r.app.Register(r.v1BookRoutes()...)
+	// Admin routes
+	r.app.Register(r.AdminRoutes()...)
+}
+
+// Home return Render
+func (r *Route) registerAll() {
+	r.app.Get("/", func(c *okapi.Context) error {
+		return commonService.Home(c)
+	})
+	r.app.Get("/sse/sessions", func(c *okapi.Context) error {
+		return commonService.Session(c)
+	},
+		okapi.Summary("Get current server time"),
+	)
+	r.app.Get("/ws", commonService.WebSocketHandle,
+		okapi.Summary("Start Websocket"),
+		okapi.DocQueryParam("token", "string", "Websocket auth token", false),
+	)
+
 }
 
 // ****************** Route Definitions ******************
 
-// Home returns the route definition for the HomeController
-func (r *Route) Home() okapi.RouteDefinition {
-	return okapi.RouteDefinition{
-		Path:    "/",
-		Method:  http.MethodGet,
-		Handler: homeController.Home,
-		Group:   &okapi.Group{Prefix: "/", Tags: []string{"HomeController"}},
-	}
-}
-
 // WhoAmI returns the route definition for the HomeController
-func (r *Route) WhoAmI() okapi.RouteDefinition {
+func (r *Route) whoAmI() okapi.RouteDefinition {
 	return okapi.RouteDefinition{
-		Path:    "/whoami",
-		Method:  http.MethodGet,
-		Handler: homeController.WhoAmI,
-		Group:   &okapi.Group{Prefix: "/", Tags: []string{"HomeController"}},
-		Options: []okapi.RouteOption{
-			okapi.DocSummary("Whoami"),
-			okapi.DocDescription("Get the current user's information, no auth required"),
-			okapi.DocHeader("current_user_email", "string", "current user", false),
-			okapi.DocHeader("current_user_name", "string", "current name", false),
-			okapi.DocHeader("current_user_role", "string", "current role", false),
-			okapi.DocResponse(models.WhoAmIResponse{}),
-		},
+		Path:        "/whoami",
+		Method:      http.MethodGet,
+		Handler:     commonService.WhoAmI,
+		Group:       r.group,
+		Summary:     "Whoami",
+		Description: "Get the current user's information, no auth requir",
+		Request:     &models.WhoAmIRequest{},
+		Response:    &models.WhoAmIResponse{},
 	}
 }
 
 // ************* Book Routes *************
 
-// APIBookRoutes returns the route definitions for the BookController
-func (r *Route) APIBookRoutes() []okapi.RouteDefinition {
-	apiGroup := &okapi.Group{Prefix: "/api", Tags: []string{"BookController"}}
+// bookRoutes returns the route definitions for the BookService
+func (r *Route) bookRoutes() []okapi.RouteDefinition {
+	apiGroup := &okapi.Group{Prefix: "/api", Tags: []string{"BookService"}}
 	apiGroup.Use(middlewares.CustomMiddleware)
 	apiGroup.Deprecated()
 	return []okapi.RouteDefinition{
 		{
 			Method:      http.MethodGet,
 			Path:        "/books",
-			Handler:     bookController.GetBooks,
+			Handler:     bookService.List,
 			Group:       apiGroup,
 			Middlewares: []okapi.Middleware{},
 			Options: []okapi.RouteOption{
 				okapi.DocSummary("Get Books"),
 				okapi.DocDescription("Retrieve a list of books"),
 				okapi.DocResponse([]models.Book{}),
-				okapi.DocResponse(http.StatusBadRequest, models.ErrorResponse{}),
+				okapi.DocResponse(&models.BookResponse{}),
 			},
 		},
 		{
 			Method:  http.MethodGet,
 			Path:    "/books/:id",
-			Handler: bookController.GetBook,
+			Handler: bookService.Get,
 			Group:   apiGroup,
 			Options: []okapi.RouteOption{
 				okapi.DocSummary("Get Book by ID"),
 				okapi.DocDescription("Retrieve a book by its ID"),
 				okapi.DocPathParam("id", "int", "The ID of the book"),
 				okapi.DocResponse(models.Book{}),
-				okapi.DocResponse(http.StatusBadRequest, models.ErrorResponse{}),
-				okapi.DocResponse(http.StatusNotFound, models.ErrorResponse{}),
+				okapi.DocResponse(http.StatusBadRequest, &models.Response[models.Book]{}),
 			},
 		},
 	}
 }
-func (r *Route) BookRoutes() []okapi.RouteDefinition {
+func (r *Route) v1BookRoutes() []okapi.RouteDefinition {
+	apiGroup := r.group.Group("/books").WithTags([]string{"V1BookService"})
+
 	return []okapi.RouteDefinition{
 		{
 			Method:      http.MethodGet,
-			Path:        "/books",
-			Handler:     bookController.GetBooks,
+			Path:        "",
+			Handler:     bookService.List,
 			Middlewares: []okapi.Middleware{middlewares.CustomMiddleware},
-			Options: []okapi.RouteOption{
-				okapi.DocSummary("Get Books"),
-				okapi.DocDescription("Retrieve a list of books"),
-				okapi.DocResponse([]models.Book{}),
-				okapi.DocResponse(http.StatusBadRequest, models.ErrorResponse{}),
-			},
+			Group:       apiGroup,
+			Summary:     "Get Books",
+			Description: "Retrieve a list of books",
+			Response:    &models.BooksResponse{},
 		},
 		{
 			Method:      http.MethodGet,
-			Path:        "/books/:id",
-			Handler:     bookController.GetBook,
+			Path:        "/:id",
+			Handler:     bookService.Get,
 			Middlewares: []okapi.Middleware{middlewares.CustomMiddleware},
+			Group:       apiGroup,
+			Summary:     "Get Book by ID",
+			Description: "Retrieve a book by its ID",
 			Options: []okapi.RouteOption{
-				okapi.DocSummary("Get Book by ID"),
-				okapi.DocDescription("Retrieve a book by its ID"),
 				okapi.DocPathParam("id", "int", "The ID of the book"),
-				okapi.DocResponse(models.Book{}),
-				okapi.DocResponse(http.StatusBadRequest, models.ErrorResponse{}),
-				okapi.DocResponse(http.StatusNotFound, models.ErrorResponse{}),
-			},
+				okapi.DocResponse(&models.Response[models.Book]{}),
+				okapi.DocResponse(http.StatusBadRequest, &models.Response[any]{})},
 		},
 	}
 }
 
 // *************** Auth Routes ****************
 
-func (r *Route) AuthRoute() okapi.RouteDefinition {
-	apiGroup := &okapi.Group{Prefix: "/auth", Tags: []string{"AuthController"}}
+func (r *Route) authRoute() okapi.RouteDefinition {
+	apiGroup := r.group.Group("/auth").WithTags([]string{"AuthService"})
 	apiGroup.Use(middlewares.CustomMiddleware)
 	return okapi.RouteDefinition{
 
-		Method:  http.MethodPost,
-		Path:    "/login",
-		Handler: authController.Login,
-		Group:   apiGroup,
-		Options: []okapi.RouteOption{
-			okapi.DocSummary("Login"),
-			okapi.DocDescription("User login to get a JWT token"),
-			okapi.DocRequestBody(models.AuthRequest{}),
-			okapi.DocResponse(models.AuthResponse{}),
-			okapi.DocResponse(http.StatusUnauthorized, models.AuthResponse{}),
-		},
+		Method:      http.MethodPost,
+		Path:        "/login",
+		Handler:     authService.Login,
+		Group:       apiGroup,
+		Summary:     "Login",
+		Description: "User login to get a JWT token",
+		Request:     &models.AuthRequest{},
+		Response:    &models.AuthResponse{},
 	}
 }
 
 // ************** Authenticated Routes **************
 
-func (r *Route) CommonRoutes() []okapi.RouteDefinition {
-	coreGroup := &okapi.Group{Prefix: "/core", Tags: []string{"SecurityController"}}
+func (r *Route) coreRoutes() []okapi.RouteDefinition {
+	coreGroup := r.group.Group("/core").WithTags([]string{"CoreService"})
 	// Apply JWT authentication middleware to the admin group
 	coreGroup.Use(middlewares.JWTAuth.Middleware)
 	coreGroup.Use(middlewares.CustomMiddleware)
-	coreGroup.WithSecurity(bearerAuthSecurity) //Enable Bearer token for OpenAPI documentation
+	// Enable Bearer token for OpenAPI documentation
+	coreGroup.WithSecurity(bearerAuthSecurity)
 	return []okapi.RouteDefinition{
 		{
-			Method:  http.MethodPost,
-			Path:    "/whoami",
-			Handler: authController.WhoAmI,
-			Group:   coreGroup,
-			Options: []okapi.RouteOption{
-				okapi.DocSummary("Whoami"),
-				okapi.DocDescription("Get the current user's information"),
-				okapi.DocResponse(models.UserInfo{}),
-			},
+			Method:      http.MethodPost,
+			Path:        "/whoami",
+			Handler:     authService.WhoAmI,
+			Group:       coreGroup,
+			Summary:     "Whoami",
+			Description: "Get the current user's information",
+			Response:    &models.Response[models.UserInfo]{},
 		},
 	}
 }
@@ -219,24 +217,23 @@ func (r *Route) CommonRoutes() []okapi.RouteDefinition {
 // ***************** Admin Routes *****************
 
 func (r *Route) AdminRoutes() []okapi.RouteDefinition {
-	apiGroup := &okapi.Group{Prefix: "/admin", Tags: []string{"AdminController"}}
+	apiGroup := r.group.Group("/admin").WithTags([]string{"AdminService"})
 	// Apply JWT authentication middleware to the admin group
 	apiGroup.Use(middlewares.AdminJWTAuth.Middleware)
 	apiGroup.Use(middlewares.CustomMiddleware)
-	apiGroup.WithBearerAuth() //Enable Bearer token for OpenAPI documentation
+	apiGroup.WithBearerAuth() // Enable Bearer token for OpenAPI documentation
 
 	return []okapi.RouteDefinition{
 
 		{
 			Method:  http.MethodPost,
 			Path:    "/books",
-			Handler: bookController.CreateBook,
+			Handler: bookService.Create,
 			Group:   apiGroup,
 			Options: []okapi.RouteOption{
 				okapi.DocSummary("Create Book"),
 				okapi.DocDescription("Create a new book"),
 				okapi.DocRequestBody(models.Book{}),
-				okapi.DocResponse(models.Response{}),
 			},
 			Security: bearerAuthSecurity,
 		},
@@ -244,7 +241,7 @@ func (r *Route) AdminRoutes() []okapi.RouteDefinition {
 		{
 			Method:  http.MethodGet,
 			Path:    "/books",
-			Handler: bookController.GetBooks,
+			Handler: bookService.List,
 			Group:   apiGroup,
 			Options: []okapi.RouteOption{
 				okapi.DocSummary("Get Books"),

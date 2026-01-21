@@ -1,3 +1,24 @@
+package data
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/jkaninda/logger"
+	"github.com/jkaninda/okapi-example/models"
+)
+
+func Books() ([]*models.Book, error) {
+	books := []*models.Book{}
+	err := json.Unmarshal([]byte(booksData), &books)
+	if err != nil {
+		logger.Error("Error unmarshalling books data", "error", err)
+		return nil, fmt.Errorf("failed to parse books data: %w", err)
+	}
+	return books, nil
+}
+
+const booksData = `
 [
   {
     "id": 1,
@@ -1400,3 +1421,4 @@
     "updatedAt": "2025-07-25T17:31:54.239043+02:00"
   }
 ]
+`

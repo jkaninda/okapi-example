@@ -1,0 +1,666 @@
+{{define "home"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.title}}</title>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ebebeb 0%, #7b797e 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      color: white;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header-content {
+      text-align: center;
+      flex: 1;
+    }
+
+    h1 {
+      color: #c53030;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 4px rgba(238, 27, 27, 0.1);
+    }
+
+    header p {
+      color: #48bb78;
+      opacity: 0.95;
+      font-size: 1.1rem;
+    }
+
+    .session-stats {
+      display: flex;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .session-stat {
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .session-stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .session-stat-label {
+      font-size: 0.75rem;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+
+    .controls {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    input {
+      padding: 0.875rem 1.25rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 15px;
+      flex: 1;
+      min-width: 200px;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    input::placeholder {
+      color: #a0aec0;
+    }
+
+    button {
+      padding: 0.875rem 1.75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    button:not(:disabled):active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #48bb78;
+      color: white;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: white;
+      font-size: 1.1rem;
+    }
+
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    .error {
+      background: #fed7d7;
+      color: #c53030;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid #c53030;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .book-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .book-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+
+    .book-image {
+      height: 240px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      position: relative;
+    }
+
+    .book-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .book-card:hover img {
+      transform: scale(1.05);
+    }
+
+    .book-info {
+      padding: 1.25rem;
+    }
+
+    .book-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #2d3748;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .book-author {
+      color: #718096;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .book-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #a0aec0;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .book-price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: white;
+      font-size: 1.2rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .stat:hover {
+      transform: translateY(-4px);
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .connection-status {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .connection-status.connected {
+      background: #48bb78;
+      box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .connection-status.disconnected {
+      background: #f56565;
+      box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2);
+      }
+      50% {
+        box-shadow: 0 0 0 6px rgba(72, 187, 120, 0.1);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: white;
+    }
+
+    .empty-state svg {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 1.5rem;
+      opacity: 0.8;
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      opacity: 0.9;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      background: #48bb78;
+      color: white;
+    }
+
+    .badge.orange {
+      background: #ed8936;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .session-stats {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" x-data="bookstore()">
+    <header>
+      <div class="header-content">
+        <h1>📚 {{.appName}}</h1>
+        <p>{{.headline}}</p>
+      </div>
+      
+      <div class="session-stats">
+        <div class="session-stat">
+          <div class="session-stat-value">
+            <span :class="sseConnected ? 'connection-status connected' : 'connection-status disconnected'"></span>
+            <span x-text="activeConnections || '0'"></span>
+          </div>
+          <div class="session-stat-label">🟢 Active</div>
+        </div>
+        <div class="session-stat">
+          <div class="session-stat-value">
+            <span x-text="totalSessions || '0'"></span>
+          </div>
+          <div class="session-stat-label">📊 Total</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="search-bar">
+        <input
+          type="text"
+          x-model="searchQuery"
+          placeholder="Search by title or author..."
+          @input.debounce.500ms="searchBooks"
+        >
+        <input
+          type="number"
+          x-model="bookId"
+          placeholder="Enter Book ID"
+          min="1"
+        >
+        <button class="btn-primary" @click="fetchAllBooks" :disabled="loading">
+          📚 All Books
+        </button>
+        <button class="btn-secondary" @click="fetchBookById" :disabled="loading || !bookId">
+          🔍 Find by ID
+        </button>
+      </div>
+    </div>
+
+    <div x-show="error" x-transition class="error" x-text="error"></div>
+
+    <div x-show="!loading && books.length > 0" x-transition class="stats">
+      <div class="stat">
+        <div class="stat-value">
+          <span x-text="books.length"></span>
+        </div>
+        <div class="stat-label">Total Books</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" x-text="averagePrice"></div>
+        <div class="stat-label">Average Price</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">
+          <span x-text="serverTime || '--:--:--'"></span>
+        </div>
+        <div class="stat-label">Server Time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">
+          <span :class="sseConnected ? 'connection-status connected' : 'connection-status disconnected'"></span>
+          <span x-text="connectedSince || '--:--:--'"></span>
+        </div>
+        <div class="stat-label">Connected Since</div>
+      </div>
+    </div>
+
+    <div x-show="loading" x-transition class="loading">
+      Loading books
+    </div>
+
+    <div x-show="!loading && books.length > 0" x-transition class="book-grid">
+      <template x-for="book in books" :key="book.id">
+        <div class="book-card">
+          <div class="book-image">
+            <img :src="book.imageLink" :alt="book.title" loading="lazy">
+          </div>
+          <div class="book-info">
+            <h3 class="book-title" x-text="book.title"></h3>
+            <p class="book-author" x-text="book.author"></p>
+            <div class="book-meta">
+              <span>📅 <span x-text="book.year"></span></span>
+              <span>🌐 <span x-text="book.language"></span></span>
+            </div>
+            <div class="book-price" x-text="`$${book.price.toFixed(2)}`"></div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <div x-show="!loading && books.length === 0" x-transition class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3>No Books Found</h3>
+      <p>Try adjusting your search or browse all books</p>
+    </div>
+  </div>
+
+  <script>
+    function bookstore() {
+      return {
+        books: [],
+        loading: false,
+        error: null,
+        searchQuery: '',
+        bookId: '',
+        serverTime: '',
+        connectedSince: '',
+        activeConnections: 0,
+        totalSessions: 0,
+        sseConnected: false,
+        eventSource: null,
+
+        init() {
+          this.fetchAllBooks();
+          this.connectSSE();
+        },
+
+        connectSSE() {
+          if (this.eventSource) {
+            this.eventSource.close();
+          }
+
+          try {
+            this.eventSource = new EventSource('/sse/sessions');
+            
+            this.eventSource.onopen = () => {
+              this.sseConnected = true;
+              console.log('✅ SSE connection established');
+            };
+
+            this.eventSource.onmessage = (event) => {
+              try {
+                const data = JSON.parse(event.data);
+                this.serverTime = data.time;
+                this.connectedSince = data.connectedSince;
+                this.activeConnections = data.activeConnections || 0;
+                this.totalSessions = data.totalSessions || 0;
+              } catch (err) {
+                console.error('Failed to parse SSE data:', err);
+                this.serverTime = event.data;
+              }
+            };
+
+            this.eventSource.onerror = (error) => {
+              console.error('❌ SSE error:', error);
+              this.sseConnected = false;
+              this.eventSource.close();
+              
+              setTimeout(() => {
+                if (!this.sseConnected) {
+                  console.log('🔄 Attempting to reconnect SSE...');
+                  this.connectSSE();
+                }
+              }, 5000);
+            };
+          } catch (err) {
+            console.error('Failed to establish SSE connection:', err);
+            this.sseConnected = false;
+          }
+        },
+
+        destroy() {
+          if (this.eventSource) {
+            this.eventSource.close();
+          }
+        },
+
+        async fetchAllBooks() {
+          this.loading = true;
+          this.error = null;
+          this.searchQuery = '';
+          this.bookId = '';
+
+          try {
+            const response = await fetch('/api/v1/books');
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch books (${response.status})`);
+            }
+            
+            this.books = await response.json();
+          } catch (err) {
+            this.error = err.message || 'Failed to fetch books';
+            this.books = [];
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        async fetchBookById() {
+          if (!this.bookId) return;
+
+          this.loading = true;
+          this.error = null;
+
+          try {
+            const response = await fetch(`/api/v1/books/${this.bookId}`);
+            
+            if (!response.ok) {
+              throw new Error(`Book with ID ${this.bookId} not found`);
+            }
+            
+            const book = await response.json();
+            this.books = [book];
+            this.searchQuery = '';
+          } catch (err) {
+            this.error = err.message || 'Failed to fetch book';
+            this.books = [];
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        async searchBooks() {
+          if (!this.searchQuery.trim()) {
+            this.fetchAllBooks();
+            return;
+          }
+
+          this.loading = true;
+          this.error = null;
+          this.bookId = '';
+
+          try {
+            const response = await fetch(`/api/v1/books?q=${encodeURIComponent(this.searchQuery)}`);
+            
+            if (!response.ok) {
+              throw new Error(`Search failed (${response.status})`);
+            }
+            
+            this.books = await response.json();
+          } catch (err) {
+            this.error = err.message || 'Search failed';
+            this.books = [];
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        get averagePrice() {
+          if (this.books.length === 0) return '$0.00';
+          const avg = this.books.reduce((sum, book) => sum + book.price, 0) / this.books.length;
+          return `$${avg.toFixed(2)}`;
+        }
+      };
+    }
+  </script>
+</body>
+</html>
+{{end}}
