@@ -38,6 +38,7 @@ import (
 var (
 	bookService        = &services.BookService{}
 	commonService      = &services.CommonService{}
+	chatRoomService    = &services.ChatRoomService{}
 	authService        = &services.AuthService{}
 	bearerAuthSecurity = []map[string][]string{
 		{
@@ -48,23 +49,25 @@ var (
 
 // You can also use this example
 
-type Route struct {
-	app   *okapi.Okapi
-	group *okapi.Group
-	cfg   *config.Config
+type Router struct {
+	app    *okapi.Okapi
+	group  *okapi.Group
+	cfg    *config.Config
+	assets http.FileSystem
 }
 
 // NewRoute creates a new Route instance with the provided Okapi app
-func New(app *okapi.Okapi, conf *config.Config) *Route {
+func New(app *okapi.Okapi, conf *config.Config, assets http.FileSystem) *Router {
 	commonService.SessionManager = conf.SessionManager
-	return &Route{
-		app:   app,
-		group: &okapi.Group{Prefix: "api/v1"},
-		cfg:   conf,
+	return &Router{
+		app:    app,
+		group:  &okapi.Group{Prefix: "api/v1"},
+		cfg:    conf,
+		assets: assets,
 	}
 }
 
-func (r *Route) RegisterRoutes() {
+func (r *Router) RegisterRoutes() {
 	r.registerAll()
 	r.app.Register(r.whoAmI())
 	r.app.Register(r.authRoute())
@@ -76,7 +79,7 @@ func (r *Route) RegisterRoutes() {
 }
 
 // Home return Render
-func (r *Route) registerAll() {
+func (r *Router) registerAll() {
 	r.app.Get("/", func(c *okapi.Context) error {
 		return commonService.Home(c)
 	})
@@ -85,17 +88,22 @@ func (r *Route) registerAll() {
 	},
 		okapi.Summary("Get current server time"),
 	)
-	r.app.Get("/ws", commonService.WebSocketHandle,
+	r.app.Get("/chat", chatRoomService.ChatPage)
+
+	// WebSocket endpoint
+	r.app.Get("/ws", chatRoomService.WebSocketHandle,
 		okapi.Summary("Start Websocket"),
 		okapi.DocQueryParam("token", "string", "Websocket auth token", false),
 	)
+	// Static
+	r.app.StaticFS("/assets", r.assets)
 
 }
 
 // ****************** Route Definitions ******************
 
 // WhoAmI returns the route definition for the HomeController
-func (r *Route) whoAmI() okapi.RouteDefinition {
+func (r *Router) whoAmI() okapi.RouteDefinition {
 	return okapi.RouteDefinition{
 		Path:        "/whoami",
 		Method:      http.MethodGet,
@@ -111,7 +119,7 @@ func (r *Route) whoAmI() okapi.RouteDefinition {
 // ************* Book Routes *************
 
 // bookRoutes returns the route definitions for the BookService
-func (r *Route) bookRoutes() []okapi.RouteDefinition {
+func (r *Router) bookRoutes() []okapi.RouteDefinition {
 	apiGroup := &okapi.Group{Prefix: "/api", Tags: []string{"BookService"}}
 	apiGroup.Use(middlewares.CustomMiddleware)
 	apiGroup.Deprecated()
@@ -144,7 +152,7 @@ func (r *Route) bookRoutes() []okapi.RouteDefinition {
 		},
 	}
 }
-func (r *Route) v1BookRoutes() []okapi.RouteDefinition {
+func (r *Router) v1BookRoutes() []okapi.RouteDefinition {
 	apiGroup := r.group.Group("/books").WithTags([]string{"V1BookService"})
 
 	return []okapi.RouteDefinition{
@@ -176,7 +184,7 @@ func (r *Route) v1BookRoutes() []okapi.RouteDefinition {
 
 // *************** Auth Routes ****************
 
-func (r *Route) authRoute() okapi.RouteDefinition {
+func (r *Router) authRoute() okapi.RouteDefinition {
 	apiGroup := r.group.Group("/auth").WithTags([]string{"AuthService"})
 	apiGroup.Use(middlewares.CustomMiddleware)
 	return okapi.RouteDefinition{
@@ -194,7 +202,7 @@ func (r *Route) authRoute() okapi.RouteDefinition {
 
 // ************** Authenticated Routes **************
 
-func (r *Route) coreRoutes() []okapi.RouteDefinition {
+func (r *Router) coreRoutes() []okapi.RouteDefinition {
 	coreGroup := r.group.Group("/core").WithTags([]string{"CoreService"})
 	// Apply JWT authentication middleware to the admin group
 	coreGroup.Use(middlewares.JWTAuth.Middleware)
@@ -216,7 +224,7 @@ func (r *Route) coreRoutes() []okapi.RouteDefinition {
 
 // ***************** Admin Routes *****************
 
-func (r *Route) AdminRoutes() []okapi.RouteDefinition {
+func (r *Router) AdminRoutes() []okapi.RouteDefinition {
 	apiGroup := r.group.Group("/admin").WithTags([]string{"AdminService"})
 	// Apply JWT authentication middleware to the admin group
 	apiGroup.Use(middlewares.AdminJWTAuth.Middleware)

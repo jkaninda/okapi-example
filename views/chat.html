@@ -1,0 +1,192 @@
+{{define "chat"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.title}}</title>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.js"></script>
+  <link rel="stylesheet" href="assets/chat.css">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+  <link rel="manifest" href="/assets/site.webmanifest">
+</head>
+<body>
+  <div class="container" x-data="chatApp()">
+    <header>
+      <h1>💬 {{.appName}}</h1>
+      <p>{{.headline}}</p>
+    </header>
+
+    <!-- Login Screen -->
+    <div x-show="!joined" class="login-box">
+      <h2>Join the Chat Room</h2>
+      <p style="margin-bottom: 1.5rem; color: #718096;">Enter your name to start chatting</p>
+      
+      <div x-show="error" class="error" x-text="error"></div>
+      
+      <div class="input-group">
+        <input
+          type="text"
+          x-model="username"
+          placeholder="Your name..."
+          @keyup.enter="joinChat"
+          maxlength="20"
+        >
+        <button class="btn-primary" @click="joinChat" :disabled="!username.trim()">
+          Join Chat
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Screen -->
+    <div x-show="joined" class="chat-container">
+      <div class="chat-header">
+        <h2>Chat Room</h2>
+        <div class="user-count">
+          <span :class="connected ? 'status-indicator' : 'status-indicator disconnected'"></span>
+          <span x-text="`${userCount} online`"></span>
+        </div>
+      </div>
+
+      <div class="messages" x-ref="messagesContainer">
+        <template x-for="msg in messages" :key="msg.id">
+          <div :class="`message ${msg.type} ${msg.username === username ? 'own' : ''}`">
+            <template x-if="msg.type === 'user'">
+              <div>
+                <div class="message-header">
+                  <span class="username" x-text="msg.username"></span>
+                  <span class="timestamp" x-text="formatTime(msg.timestamp)"></span>
+                </div>
+                <div class="message-bubble" x-text="msg.message"></div>
+              </div>
+            </template>
+            <template x-if="msg.type !== 'user'">
+              <div x-text="msg.message"></div>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <div class="input-area">
+        <div class="input-group">
+          <input
+            type="text"
+            x-model="newMessage"
+            placeholder="Type a message..."
+            @keyup.enter="sendMessage"
+            :disabled="!connected"
+          >
+          <button class="btn-secondary" @click="sendMessage" :disabled="!connected || !newMessage.trim()">
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function chatApp() {
+      return {
+        username: '',
+        joined: false,
+        connected: false,
+        ws: null,
+        messages: [],
+        newMessage: '',
+        userCount: 0,
+        error: null,
+        messageId: 0,
+
+        joinChat() {
+          if (!this.username.trim()) {
+            this.error = 'Please enter your name';
+            return;
+          }
+
+          this.error = null;
+          this.joined = true;
+          this.connectWebSocket();
+        },
+
+        connectWebSocket() {
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl = `${protocol}//${window.location.host}/ws?username=${encodeURIComponent(this.username)}`;
+          
+          try {
+            this.ws = new WebSocket(wsUrl);
+
+            this.ws.onopen = () => {
+              this.connected = true;
+              console.log('✅ WebSocket connected');
+            };
+
+            this.ws.onmessage = (event) => {
+              try {
+                const msg = JSON.parse(event.data);
+                msg.id = this.messageId++;
+                this.messages.push(msg);
+                
+                if (msg.userCount) {
+                  this.userCount = msg.userCount;
+                }
+
+                // Scroll to bottom
+                this.$nextTick(() => {
+                  const container = this.$refs.messagesContainer;
+                  container.scrollTop = container.scrollHeight;
+                });
+              } catch (err) {
+                console.error('Failed to parse message:', err);
+              }
+            };
+
+            this.ws.onerror = (error) => {
+              console.error('❌ WebSocket error:', error);
+              this.error = 'Connection error';
+            };
+
+            this.ws.onclose = () => {
+              this.connected = false;
+              console.log('WebSocket disconnected');
+              
+              // Attempt to reconnect after 3 seconds
+              setTimeout(() => {
+                if (this.joined && !this.connected) {
+                  console.log('🔄 Attempting to reconnect...');
+                  this.connectWebSocket();
+                }
+              }, 3000);
+            };
+          } catch (err) {
+            console.error('Failed to create WebSocket:', err);
+            this.error = 'Failed to connect';
+          }
+        },
+
+        sendMessage() {
+          if (!this.newMessage.trim() || !this.connected) return;
+
+          const message = {
+            type: 'message',
+            message: this.newMessage.trim()
+          };
+
+          this.ws.send(JSON.stringify(message));
+          this.newMessage = '';
+        },
+
+        formatTime(timestamp) {
+          const date = new Date(timestamp);
+          return date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+        }
+      };
+    }
+  </script>
+</body>
+</html>
+{{end}}

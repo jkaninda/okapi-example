@@ -50,7 +50,7 @@ The server will start at `http://localhost:8080`
 ```shell
 docker run --rm --name okapi-example \
   -p 8080:8080 \
-  -e JWT_SIGNING_SECRET=your-secret-key \
+  -e JWT_SECRET=your-secret-key \
   jkaninda/okapi-example
 ```
 

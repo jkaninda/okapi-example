@@ -1,0 +1,248 @@
+{{define "datastar"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datastar SSE Example</title>
+    <script type="module" defer src="https://cdn.jsdelivr.net/npm/@sudodevnull/datastar"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .status.online {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status.offline {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .button:hover {
+            background: #5568d3;
+        }
+        
+        .button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .log-entry {
+            padding: 0.5rem;
+            border-left: 3px solid #667eea;
+            background: #f7fafc;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            border-radius: 4px;
+        }
+        
+        .log-time {
+            color: #718096;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        
+        .chart {
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            margin-top: 1rem;
+        }
+        
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s ease;
+            min-height: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" 
+         data-store='{"serverTime":"--:--:--","cpuUsage":0,"memoryUsage":0,"activeUsers":0,"requestsPerMinute":0,"status":"offline","logs":[],"chartData":[0,0,0,0,0,0,0,0,0,0]}'>
+        <h1>🚀 Datastar SSE Dashboard</h1>
+        
+        <div class="grid">
+            <!-- Server Status Card -->
+            <div class="card">
+                <h2>Server Status</h2>
+                <div class="metric">
+                    <span class="metric-label">Status</span>
+                    <span class="status online" data-text="$status"></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Server Time</span>
+                    <span class="metric-value" data-text="$serverTime"></span>
+                </div>
+                <button 
+                    class="button" 
+                    data-on-click="$$get('/datastar/systemInfo')">
+                    Connect to Server
+                </button>
+            </div>
+            
+            <!-- System Metrics Card -->
+            <div class="card">
+                <h2>System Metrics</h2>
+                <div class="metric">
+                    <span class="metric-label">CPU Usage</span>
+                    <span class="metric-value" data-text="`${$cpuUsage}%`"></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" data-style="`width: ${$cpuUsage}%`"></div>
+                </div>
+                
+                <div class="metric" style="margin-top: 1rem;">
+                    <span class="metric-label">Memory</span>
+                    <span class="metric-value" data-text="`${$memoryUsage}%`"></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" data-style="`width: ${$memoryUsage}%`"></div>
+                </div>
+            </div>
+            
+            <!-- Traffic Card -->
+            <div class="card">
+                <h2>Traffic</h2>
+                <div class="metric">
+                    <span class="metric-label">Active Users</span>
+                    <span class="metric-value" data-text="$activeUsers"></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Requests/min</span>
+                    <span class="metric-value" data-text="$requestsPerMinute"></span>
+                </div>
+                <div class="chart">
+                    <div class="bar" data-style="`height: ${$chartData[0] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[1] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[2] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[3] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[4] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[5] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[6] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[7] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[8] || 0}%`"></div>
+                    <div class="bar" data-style="`height: ${$chartData[9] || 0}%`"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Activity Log -->
+        <div class="card">
+            <h2>Activity Log</h2>
+            <template data-for="log in $logs">
+                <div class="log-entry">
+                    <span class="log-time" data-text="log.time"></span>
+                    <span data-text="' - ' + log.message"></span>
+                </div>
+            </template>
+            <div data-show="$logs.length === 0" style="color: #718096; text-align: center; padding: 2rem;">
+                No activity yet. Connect to start receiving updates.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{{end}}

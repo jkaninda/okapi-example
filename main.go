@@ -2,37 +2,33 @@ package main
 
 import (
 	"embed"
-	"html/template"
-	"io"
+	"io/fs"
+	"net/http"
 
 	"github.com/jkaninda/logger"
 	"github.com/jkaninda/okapi"
 	"github.com/jkaninda/okapi-example/config"
 	"github.com/jkaninda/okapi-example/routes"
+	"github.com/jkaninda/okapi-example/utils"
 )
 
-//go:embed views/*
-var Views embed.FS
+var (
+	//go:embed views/*
+	Views    embed.FS
+	AssetsFS = http.FS(utils.Must(fs.Sub(Views, "views/assets")))
+)
 
-type Template struct {
-	templates *template.Template
-}
-
-func (t *Template) Render(w io.Writer, name string, data interface{}, c *okapi.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
-}
-func NewTemplate() *Template {
-	tmpl := template.Must(template.ParseFS(Views, "views/*.html"))
-	return &Template{templates: tmpl}
-}
 func main() {
+	// tmpl, _ := okapi.NewTemplateFromDirectory("public/views", ".html", ".tmpl")
+
 	app := okapi.New()
 	conf := config.New()
 	if err := conf.Initialize(app); err != nil {
 		logger.Fatal("Failed to initialize config", "error", err)
 	}
-	app.WithRenderer(NewTemplate())
-	route := routes.New(app, conf)
+	// app.WithRenderer(tmpl)
+	app.WithRendererFromFS(Views, "views/*.html")
+	route := routes.New(app, conf, AssetsFS)
 	route.RegisterRoutes()
 
 	// Start the server

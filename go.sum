@@ -10,8 +10,8 @@ github.com/go-openapi/testify/v2 v2.0.2 h1:X999g3jeLcoY8qctY/c/Z8iBHTbwLz7R2WXd6
 github.com/go-openapi/testify/v2 v2.0.2/go.mod h1:HCPmvFFnheKK2BuwSA0TbbdxJ3I16pjwMkYkP4Ywn54=
 github.com/go-test/deep v1.0.8 h1:TDsG77qcSprGbC6vTN8OuXp5g+J+b5Pcguhf7Zt61VM=
 github.com/go-test/deep v1.0.8/go.mod h1:5C2ZWiW0ErCdrYzpqxLbTX7MG14M9iiw8DgHncVwcsE=
-github.com/golang-jwt/jwt/v5 v5.3.0 h1:pv4AsKCKKZuqlgs5sUmn4x8UlGa0kEVt/puTpKx9vvo=
-github.com/golang-jwt/jwt/v5 v5.3.0/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
+github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=
+github.com/golang-jwt/jwt/v5 v5.3.1/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
@@ -24,12 +24,8 @@ github.com/jkaninda/go-utils v0.1.4 h1:ZdNlI+yLWc4/S0qKcCNQIPj+6lHSdJcGaxtRADAif
 github.com/jkaninda/go-utils v0.1.4/go.mod h1:Aa54jEAcDykc3CnOdreqZG80UfSZOvrYecyusu+oPb4=
 github.com/jkaninda/logger v0.0.5 h1:fTHKgDsHtuN8rkSBvwe6QStfi8yIdm8O3r0g99dRDTY=
 github.com/jkaninda/logger v0.0.5/go.mod h1:ZUXJ2BdxDPG6e8t6mbKhc2ZFaFi2Iuy/4ukquFrPkFE=
-github.com/jkaninda/okapi v0.1.3-rc1 h1:ClpTUEIRmgQmHKprecka2GboN06gj/4MyxXz2bKSwFs=
-github.com/jkaninda/okapi v0.1.3-rc1/go.mod h1:VORIE1RY2jhNsodcHF2kLNjAXwp4G7EBXf//VRZP2lc=
-github.com/jkaninda/okapi v0.1.3-rc2 h1:D0INvElPvRKqVZ+VXkowmq4ZnGsk8K7ZTLpyzG/7BkA=
-github.com/jkaninda/okapi v0.1.3-rc2/go.mod h1:VORIE1RY2jhNsodcHF2kLNjAXwp4G7EBXf//VRZP2lc=
-github.com/jkaninda/okapi v0.2.0 h1:sWWysiEvuxqXMbEwjDpY1CTsgIBs130p8LX+7IISeTE=
-github.com/jkaninda/okapi v0.2.0/go.mod h1:VORIE1RY2jhNsodcHF2kLNjAXwp4G7EBXf//VRZP2lc=
+github.com/jkaninda/okapi v0.3.3 h1:uLwzmh2RqY236B/IbeUvHo7VW4G1N/1m1ToAqZjONMA=
+github.com/jkaninda/okapi v0.3.3/go.mod h1:qZs9Wy9Mo5PghnXpaGwt4H6kx1Cb8HZgmGmZDG1/eA8=
 github.com/jkaninda/okapi-ws v0.0.0-20260117135650-dd9a12fcc236 h1:hs0ybM54mAR9wVeDM32CAvNwT+LEGjP098AHlmsEV3g=
 github.com/jkaninda/okapi-ws v0.0.0-20260117135650-dd9a12fcc236/go.mod h1:wC/XqK1Ti05kWx+aZ3wfB2Q8zDi/drg9Lpvsq06gksY=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=

@@ -3,10 +3,10 @@ module github.com/jkaninda/okapi-example
 go 1.25.5
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jkaninda/go-utils v0.1.4
 	github.com/jkaninda/logger v0.0.5
-	github.com/jkaninda/okapi v0.2.0
+	github.com/jkaninda/okapi v0.3.3
 	github.com/jkaninda/okapi-ws v0.0.0-20260117135650-dd9a12fcc236
 	github.com/joho/godotenv v1.5.1
 )

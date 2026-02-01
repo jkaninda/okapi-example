@@ -41,6 +41,9 @@ import (
 type CommonService struct {
 	SessionManager *session.SessionManager
 }
+type DatastarEvent struct {
+	Data map[string]interface{} `json:"data"`
+}
 
 // WebSocket upgrades the HTTP connection to WebSocket.
 // Config is optional; pass nil to use default settings.
@@ -122,7 +125,7 @@ func (cs *CommonService) WhoAmI(c *okapi.Context) error {
 func (cs *CommonService) WebSocketHandle(c *okapi.Context) error {
 	token := c.Query("token")
 	if len(token) == 0 {
-		return c.AbortBadRequest("Bad Request", fmt.Errorf("missing token"))
+		// validate token here
 	}
 	ws, err := WebSocket(nil, c)
 	if err != nil {
