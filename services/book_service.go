@@ -24,13 +24,7 @@ func (bc *BookService) List(c *okapi.Context) error {
 	return c.OK(books)
 }
 
-func (bc *BookService) Create(c *okapi.Context) error {
-	// Simulate creating a book in a database
-	book := &models.Book{}
-	err := c.Bind(book)
-	if err != nil {
-		return c.ErrorBadRequest(models.ErrorResponse)
-	}
+func (bc *BookService) Create(c *okapi.Context, book *models.Book) error {
 	book.Id = len(books) + 1
 	books = append(books, book)
 

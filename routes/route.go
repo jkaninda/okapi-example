@@ -236,7 +236,7 @@ func (r *Router) AdminRoutes() []okapi.RouteDefinition {
 		{
 			Method:  http.MethodPost,
 			Path:    "/books",
-			Handler: bookService.Create,
+			Handler: okapi.H(bookService.Create),
 			Group:   apiGroup,
 			Options: []okapi.RouteOption{
 				okapi.DocSummary("Create Book"),

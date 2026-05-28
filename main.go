@@ -19,9 +19,7 @@ var (
 )
 
 func main() {
-	// tmpl, _ := okapi.NewTemplateFromDirectory("public/views", ".html", ".tmpl")
-
-	app := okapi.New()
+	app := okapi.New().WithDebug()
 	conf := config.New()
 	if err := conf.Initialize(app); err != nil {
 		logger.Fatal("Failed to initialize config", "error", err)
